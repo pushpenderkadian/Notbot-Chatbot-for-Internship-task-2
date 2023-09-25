@@ -1,8 +1,6 @@
-import asyncio
-import requests
+import asyncio,pytz,requests
 from fastapi import FastAPI, Request
 from pymongo import MongoClient as mc
-import pytz
 from datetime import datetime
 from geopy.geocoders import Nominatim
 from timezonefinder import TimezoneFinder
@@ -374,7 +372,7 @@ _(Note: Once you get a reminder confirmation there is no going back)_''',
             if (result.status_code == 200):
                 print("task scheduled")
                 sctasks.delete_one({"_id": number})
-                mobilezone.update_one({"_id":number},{"$inc":{"_credit":-1}})
+                mobilezone.update_one({"_id":number},{"$inc":{"credit":-1}})
         else:
             scheduled_resp = {
                 "to_number": number,
@@ -408,7 +406,7 @@ async def check_tasks():
         timestamps = [document["_id"] for document in cursor]
         current_time = int(datetime.now().timestamp())
         for j in timestamps:
-            if current_time >= j:
+            if current_time >= int(j):
                 sending_tasks = tasks.find_one({"_id": j})["tasks"]
                 for i in sending_tasks:
                     sndmsg = {
