@@ -425,6 +425,9 @@ async def check_tasks():
 
         await asyncio.sleep(20)
 
+@app.get("/")
+async def webhock(request: Request):
+    return "deployed"
 
 @app.post("/")
 async def webhock(request: Request):
