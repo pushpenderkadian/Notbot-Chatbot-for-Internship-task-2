@@ -1,0 +1,8 @@
+asyncio
+fastapi[all]
+pymongo
+pytz
+geopy
+timezonefinder
+parsedatetime
+uvicorn[standard]
