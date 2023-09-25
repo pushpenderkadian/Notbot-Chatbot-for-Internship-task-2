@@ -117,30 +117,32 @@ def schedule_work(date_time_str, timezone, task, number):
         return f"You got it boss!💥\nI will remind you *{(datetime.fromtimestamp(unix_timestamp, pytz.timezone(timezone))).strftime('%Y-%m-%d %H:%M:%S %Z')}* to *{task}*."
 
     else:
-        date_time_obj = datetime.strptime(date_time_str, "%Y-%m-%d %H:%M:%S")
-
-        unix_timestamps = {}
-        tz = pytz.timezone(timezone)
-        localized_datetime = tz.localize(date_time_obj)
-        unix_timestamp = int(localized_datetime.timestamp())
-        unix_timestamps[timezone] = unix_timestamp
-
-        print(f"time now : ", int(datetime.now().timestamp()))
         try:
-            if (unix_timestamp > int(datetime.now().timestamp())):
-                if (not tasks.find_one({"_id": unix_timestamp}) == None):
-                    arr = tasks.find_one({"_id": unix_timestamp})["tasks"]
-                    newarr = arr.append([task, number])
-                    tasks.update_one({"_id": unix_timestamp}, {
-                                     "$set": {"tasks": newarr}})
+            date_time_obj = datetime.strptime(date_time_str, "%Y-%m-%d %H:%M:%S")
+            unix_timestamps = {}
+            tz = pytz.timezone(timezone)
+            localized_datetime = tz.localize(date_time_obj)
+            unix_timestamp = int(localized_datetime.timestamp())
+            unix_timestamps[timezone] = unix_timestamp
+
+            print(f"time now : ", int(datetime.now().timestamp()))
+            try:
+                if (unix_timestamp > int(datetime.now().timestamp())):
+                    if (not tasks.find_one({"_id": unix_timestamp}) == None):
+                        arr = tasks.find_one({"_id": unix_timestamp})["tasks"]
+                        newarr = arr.append([task, number])
+                        tasks.update_one({"_id": unix_timestamp}, {
+                                        "$set": {"tasks": newarr}})
+                    else:
+                        tasks.insert_one(
+                            {"_id": unix_timestamp, "tasks": [[task, number]]})
+                    return f"You got it boss!💥\nI will remind you *{(datetime.fromtimestamp(unix_timestamp, pytz.timezone(timezone))).strftime('%Y-%m-%d %H:%M:%S %Z')}* to *{task}*."
                 else:
-                    tasks.insert_one(
-                        {"_id": unix_timestamp, "tasks": [[task, number]]})
-                return f"You got it boss!💥\nI will remind you *{(datetime.fromtimestamp(unix_timestamp, pytz.timezone(timezone))).strftime('%Y-%m-%d %H:%M:%S %Z')}* to *{task}*."
-            else:
+                    return ("Wrong Input!! \ntry again or type *help* to see the guide")
+            except:
                 return ("Wrong Input!! \ntry again or type *help* to see the guide")
         except:
-            return ("Wrong Input!! \ntry again or type *help* to see the guide")
+                return ("Wrong Input!! \ntry again or type *help* to see the guide")
 
 
 def get_timezone(city, country):
@@ -251,7 +253,7 @@ e.g. on 30 July 2025 at 11:59
         "skip_filter": True
     }
 
-    if "hi" in msg.lower() or "hello" in msg.lower() or "hlo" in msg.lower():
+    if "hi" == msg.lower() or "hello" == msg.lower() or "hlo" == msg.lower():
         result = requests.post(url=url, headers=header, json=greet)
         if (result.status_code == 200):
             print("Greeting msg sent to ", number)
@@ -358,10 +360,13 @@ _(Note: Once you get a reminder confirmation there is no going back)_''',
         return "done"
 
     sctasks = king.remindme.Scheduled_Tasks
-    if (not sctasks.find_one({"_id": number}) == None):
+    print(sctasks.find_one({"_id": number}))
+    print(type(number))
+    if (not (sctasks.find_one({"_id": number}) == None)):
         if(mobilezone.find_one({"_id":number})["credit"]>=0):
             resp = schedule_work(msg, mobilezone.find_one({"_id": number})[
                                 "timezone"], sctasks.find_one({"_id": number})["tasks"], number)
+            print(resp)
             scheduled_resp = {
                 "to_number": number,
                 "type": "text",
@@ -372,7 +377,10 @@ _(Note: Once you get a reminder confirmation there is no going back)_''',
             if (result.status_code == 200):
                 print("task scheduled")
                 sctasks.delete_one({"_id": number})
-                mobilezone.update_one({"_id":number},{"$inc":{"credit":-1}})
+                if ( "Wrong Input" not in resp):
+                    mobilezone.update_one({"_id":number},{"$inc":{"credit":-1}})
+                else: 
+                    print("wrong input")
         else:
             scheduled_resp = {
                 "to_number": number,
@@ -419,12 +427,12 @@ async def check_tasks():
                         url=url, headers=header, json=sndmsg)
                     if (result.status_code == 200):
                         print("Alert sent for task to ", i[1])
-            tasks.delete_one({"_id": j})
+                tasks.delete_one({"_id": j})
 
         await asyncio.sleep(20)
 
 @app.get("/")
-async def webhock(request: Request):
+async def webhock():
     return "deployed"
 
 @app.post("/")
