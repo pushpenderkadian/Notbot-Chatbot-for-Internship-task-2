@@ -5,17 +5,25 @@ from datetime import datetime
 from geopy.geocoders import Nominatim
 from timezonefinder import TimezoneFinder
 import parsedatetime as pdt
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
+
+GCP_PROJECT_ID = os.getenv('GCP_PROJECT_ID')
+SERVICE_ACCOUNT_FILE = os.getenv('SERVICE_ACCOUNT_FILE')
+STORAGE_BUCKET_NAME = os.getenv('STORAGE_BUCKET_NAME')
 
 app = FastAPI()
-
-product_id = "51f345da-e52c-4444-a900-427e6c05db55"
-token = "e544d376-d7a6-4a7e-ae49-c991317cb016"
-phone_id = 33008
+            
+product_id = os.getenv('product_id')
+token = os.getenv('token')
+phone_id = os.getenv('phone_id')
+mgdb = os.getenv('mgdb')
 header = {"x-maytapi-key": token}
 url = f"https://api.maytapi.com/api/{product_id}/{phone_id}/sendMessage"
 
-king = mc("mongodb+srv://remindme:nUg9F1xlK2LPXA6z@cluster0.zhoempa.mongodb.net/")
+king = mc(mgdb)
 
 
 def schedule_work(date_time_str, timezone, task, number):
